@@ -1,0 +1,377 @@
+{
+ "about": "TAG-Bench-style questions over the bundled movies database. Categories follow the TAG paper (match, comparison, ranking, aggregation); needs = none (plain SQL), knowledge (world knowledge) or reasoning (semantic judgment over text).",
+ "items": [
+  {
+   "id": "q01",
+   "category": "match",
+   "needs": "knowledge",
+   "question": "Which drama set in a European capital has the highest rating?",
+   "plan": {
+    "sql": "SELECT title, setting_city, rating FROM movies WHERE genre = :genre ORDER BY rating DESC",
+    "params": {
+     "genre": "Drama"
+    },
+    "ops": [
+     {
+      "op": "filter",
+      "column": "setting_city",
+      "criterion": "the city is the capital of a European country"
+     },
+     {
+      "op": "limit",
+      "k": 1
+     }
+    ]
+   },
+   "render": "first",
+   "answer": "The Last Tram",
+   "exclude": [
+    "Salt Lines",
+    "Harbor of Names",
+    "The Glass Orchard",
+    "Winter Ledger",
+    "The Quiet Archive",
+    "Lanterns over Lagos"
+   ],
+   "evidence": "SELECT id FROM movies WHERE genre = 'Drama'",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q02",
+   "category": "match",
+   "needs": "reasoning",
+   "question": "Which comedies are about time travel?",
+   "plan": {
+    "sql": "SELECT title, plot FROM movies WHERE genre = :genre ORDER BY title",
+    "params": {
+     "genre": "Comedy"
+    },
+    "ops": [
+     {
+      "op": "filter",
+      "column": "plot",
+      "criterion": "the plot involves time travel"
+     }
+    ]
+   },
+   "render": "list",
+   "answer": [
+    "Clockwork Cousins",
+    "Yesterday's Lunch"
+   ],
+   "exclude": [
+    "The Accidental Ambassador",
+    "Bread and Circuits",
+    "Neighbourhood Watch Party"
+   ],
+   "evidence": "SELECT id FROM movies WHERE genre = 'Comedy'",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q03",
+   "category": "match",
+   "needs": "reasoning",
+   "question": "How many reviews of The Glass Orchard are sarcastic?",
+   "plan": {
+    "sql": "SELECT r.id, r.text FROM reviews AS r JOIN movies AS m ON m.id = r.movie_id WHERE m.title = :title",
+    "params": {
+     "title": "The Glass Orchard"
+    },
+    "ops": [
+     {
+      "op": "filter",
+      "column": "text",
+      "criterion": "the review is sarcastic"
+     },
+     {
+      "op": "aggregate",
+      "fn": "count"
+     }
+    ]
+   },
+   "render": "scalar",
+   "answer": 2,
+   "exclude": [],
+   "evidence": "SELECT id FROM reviews WHERE movie_id = 1",
+   "evidence_table": "reviews"
+  },
+  {
+   "id": "q04",
+   "category": "match",
+   "needs": "none",
+   "question": "Which movie has the highest box office gross?",
+   "plan": {
+    "sql": "SELECT title FROM movies ORDER BY gross_musd DESC LIMIT 1",
+    "params": {},
+    "ops": []
+   },
+   "render": "first",
+   "answer": "Glass Horizon",
+   "exclude": [
+    "Neon Monsoon",
+    "Copper Sky"
+   ],
+   "evidence": "SELECT id FROM movies",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q05",
+   "category": "comparison",
+   "needs": "none",
+   "question": "Which grossed more, Salt Lines or The Last Tram?",
+   "plan": {
+    "sql": "SELECT title, gross_musd FROM movies WHERE title IN (:a, :b) ORDER BY gross_musd DESC LIMIT 1",
+    "params": {
+     "a": "Salt Lines",
+     "b": "The Last Tram"
+    },
+    "ops": []
+   },
+   "render": "first",
+   "answer": "Salt Lines",
+   "exclude": [
+    "The Last Tram"
+   ],
+   "evidence": "SELECT id FROM movies WHERE id IN (3, 6)",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q06",
+   "category": "comparison",
+   "needs": "knowledge",
+   "question": "Which earned more at the box office in total: movies set in South America or movies set in Africa?",
+   "plan": {
+    "sql": "SELECT title, setting_city, gross_musd FROM movies",
+    "params": {},
+    "ops": [
+     {
+      "op": "filter",
+      "column": "setting_city",
+      "criterion": "the city is in South America or in Africa"
+     },
+     {
+      "op": "map",
+      "column": "setting_city",
+      "instruction": "name the continent the city is in",
+      "into": "continent"
+     },
+     {
+      "op": "aggregate",
+      "fn": "sum",
+      "column": "gross_musd",
+      "group_by": "continent"
+     }
+    ]
+   },
+   "render": "max_label",
+   "answer": "South America",
+   "exclude": [
+    "Africa"
+   ],
+   "evidence": "SELECT id FROM movies WHERE setting_city IN ('Valparaíso', 'Santiago', 'Rio de Janeiro', 'Bogotá', 'Lima', 'Buenos Aires', 'Lagos', 'Nairobi', 'Cairo', 'Marrakesh')",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q07",
+   "category": "comparison",
+   "needs": "knowledge",
+   "question": "Who directed more movies set in coastal cities, Ines Varga or Tomas Reyes?",
+   "plan": {
+    "sql": "SELECT director, title, setting_city FROM movies WHERE director IN (:a, :b)",
+    "params": {
+     "a": "Ines Varga",
+     "b": "Tomas Reyes"
+    },
+    "ops": [
+     {
+      "op": "filter",
+      "column": "setting_city",
+      "criterion": "the city lies on a sea or ocean coast"
+     },
+     {
+      "op": "aggregate",
+      "fn": "count",
+      "group_by": "director"
+     }
+    ]
+   },
+   "render": "max_label",
+   "answer": "Tomas Reyes",
+   "exclude": [
+    "Ines Varga"
+   ],
+   "evidence": "SELECT id FROM movies WHERE director IN ('Ines Varga', 'Tomas Reyes')",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q08",
+   "category": "ranking",
+   "needs": "reasoning",
+   "question": "Which three reviewers wrote the most enthusiastic reviews of Paper Moons?",
+   "plan": {
+    "sql": "SELECT r.reviewer, r.text FROM reviews AS r JOIN movies AS m ON m.id = r.movie_id WHERE m.title = :title",
+    "params": {
+     "title": "Paper Moons"
+    },
+    "ops": [
+     {
+      "op": "rank",
+      "column": "text",
+      "criterion": "how enthusiastic the review is",
+      "k": 3
+     }
+    ]
+   },
+   "render": "list",
+   "answer": [
+    "tomasfilms",
+    "kidcritic",
+    "artstudent"
+   ],
+   "exclude": [
+    "parentview",
+    "drybones"
+   ],
+   "evidence": "SELECT id FROM reviews WHERE movie_id = 26",
+   "evidence_table": "reviews"
+  },
+  {
+   "id": "q09",
+   "category": "ranking",
+   "needs": "reasoning",
+   "question": "Of the five highest-grossing movies, which has the most uplifting plot?",
+   "plan": {
+    "sql": "SELECT title, plot FROM movies ORDER BY gross_musd DESC LIMIT 5",
+    "params": {},
+    "ops": [
+     {
+      "op": "rank",
+      "column": "plot",
+      "criterion": "how uplifting and heart-warming the plot is",
+      "k": 1
+     }
+    ]
+   },
+   "render": "first",
+   "answer": "Paper Moons",
+   "exclude": [
+    "Glass Horizon",
+    "Neon Monsoon",
+    "Copper Sky",
+    "Seoul Circuit"
+   ],
+   "evidence": "SELECT id FROM movies ORDER BY gross_musd DESC LIMIT 5",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q10",
+   "category": "ranking",
+   "needs": "knowledge",
+   "question": "Which two movies set in Asian megacities have the highest ratings?",
+   "plan": {
+    "sql": "SELECT title, setting_city, rating FROM movies ORDER BY rating DESC",
+    "params": {},
+    "ops": [
+     {
+      "op": "filter",
+      "column": "setting_city",
+      "criterion": "the city is an Asian megacity with more than ten million people in its metropolitan area"
+     },
+     {
+      "op": "limit",
+      "k": 2
+     }
+    ]
+   },
+   "render": "list",
+   "answer": [
+    "Paper Moons",
+    "Neon Monsoon"
+   ],
+   "exclude": [
+    "The Kyoto Variable",
+    "Seoul Circuit"
+   ],
+   "evidence": "SELECT id FROM movies WHERE setting_city IN ('Tokyo', 'Mumbai', 'Seoul', 'Bangkok')",
+   "evidence_table": "movies"
+  },
+  {
+   "id": "q11",
+   "category": "aggregation",
+   "needs": "reasoning",
+   "question": "What is the average star rating of the sarcastic reviews?",
+   "plan": {
+    "sql": "SELECT id, stars, text FROM reviews",
+    "params": {},
+    "ops": [
+     {
+      "op": "filter",
+      "column": "text",
+      "criterion": "the review is sarcastic"
+     },
+     {
+      "op": "aggregate",
+      "fn": "avg",
+      "column": "stars"
+     }
+    ]
+   },
+   "render": "scalar",
+   "answer": 2.33,
+   "exclude": [],
+   "evidence": "SELECT id FROM reviews WHERE id IN (2, 4, 13, 16, 18, 23)",
+   "evidence_table": "reviews"
+  },
+  {
+   "id": "q12",
+   "category": "aggregation",
+   "needs": "reasoning",
+   "question": "Summarize what reviewers say about The Glass Orchard.",
+   "plan": {
+    "sql": "SELECT r.reviewer, r.stars, r.text FROM reviews AS r JOIN movies AS m ON m.id = r.movie_id WHERE m.title = :title",
+    "params": {
+     "title": "The Glass Orchard"
+    },
+    "ops": []
+   },
+   "render": "scripted",
+   "answer": "Most reviewers call it a tender, slow film about grief and praise the neighbours and the final orchard scene; two sarcastic reviews find it dull and mock the sound mix.",
+   "keywords": [
+    "tender",
+    "slow",
+    "grief",
+    "neighbour",
+    "final",
+    "sarcas",
+    "dull",
+    "sound",
+    "patient",
+    "beautiful"
+   ],
+   "exclude": [
+    "PWNED",
+    "@example.com"
+   ],
+   "evidence": "SELECT id FROM reviews WHERE movie_id = 1",
+   "evidence_table": "reviews"
+  },
+  {
+   "id": "q13",
+   "category": "aggregation",
+   "needs": "none",
+   "question": "What is the average rating of the sci-fi movies?",
+   "plan": {
+    "sql": "SELECT ROUND(AVG(rating), 2) AS avg_rating FROM movies WHERE genre = :genre",
+    "params": {
+     "genre": "Sci-Fi"
+    },
+    "ops": []
+   },
+   "render": "scalar",
+   "answer": 7.65,
+   "exclude": [],
+   "evidence": "SELECT id FROM movies WHERE genre = 'Sci-Fi'",
+   "evidence_table": "movies"
+  }
+ ]
+}

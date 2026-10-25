@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff + mypy + bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --all-extras
+      - name: ruff check
+        run: poetry run ruff check tag_agent tests examples
+      - name: ruff format --check
+        run: poetry run ruff format --check tag_agent tests examples
+      - name: mypy
+        run: poetry run mypy tag_agent
+      - name: bandit
+        run: poetry run bandit -c pyproject.toml -q -r tag_agent
+
+  audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: pip-audit
+        run: |
+          # pip is tooling, not a shipped dependency: upgrade it so its own advisories don't fail the audit.
+          poetry run python -m pip install --upgrade -q pip
+          poetry run pip-audit
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run pytest (fake model, no network)
+        run: poetry run pytest -q
+      - name: Bundled database matches its JSON source
+        run: poetry run python -m tag_agent.dataset --check
+      - name: Quickstart example (offline)
+        run: poetry run python -m examples.quickstart
+      - name: CLI smoke run (fake provider, every mode)
+        run: |
+          poetry run python -m tag_agent --provider fake --mode all "Which drama set in a European capital has the highest rating?" | tee out.txt
+          grep -q "\[tag\] The Last Tram" out.txt
+          grep -q "\[agent\] The Last Tram" out.txt
+      - name: Benchmark smoke run (guard + pipeline metrics)
+        run: |
+          poetry run python -m tag_agent.bench | tee bench.txt
+          grep -q "51/51 adversarial queries rejected" bench.txt
+          grep -q "| all | 3/13 | 13/13 | 13/13 |" bench.txt
+      - name: Build the wheel and check the bundled data is inside
+        run: |
+          poetry build -q
+          python - <<'PY'
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          for f in ("movies.sqlite", "bench.json", "oracle.json", "adversarial.json", "py.typed"):
+              assert any(n.endswith(f) for n in names), f
+          print("wheel ok:", len(names), "files")
+          PY

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#38bdf8"/>
+    </marker>
+    <style>
+      text { font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif; }
+      .t { fill: #e2e8f0; font-size: 21px; }
+      .s { fill: #94a3b8; font-size: 15px; }
+      .n { fill: #38bdf8; font-size: 15px; font-weight: 700; }
+      .m { fill: #38bdf8; font-size: 15px; font-family: "DejaVu Sans Mono", monospace; }
+      .row { fill: #cbd5e1; font-size: 15px; font-family: "DejaVu Sans Mono", monospace; }
+      .dim { fill: #64748b; font-size: 15px; font-family: "DejaVu Sans Mono", monospace; }
+      .box { fill: #111a33; stroke: #38bdf8; stroke-width: 2; }
+      .card { fill: #0f172a; stroke: #334155; stroke-width: 2; }
+      .e { stroke: #38bdf8; stroke-width: 2.5; fill: none; marker-end: url(#a); }
+    </style>
+  </defs>
+  <rect width="1280" height="640" fill="#0b1020"/>
+
+  <text x="80" y="108" fill="#f8fafc" font-size="56" font-weight="700">langchain-tag-agent</text>
+  <text x="80" y="156" fill="#94a3b8" font-size="25">Table-Augmented Generation: SQL for computation, the LM for knowledge.</text>
+
+  <!-- question -->
+  <rect class="card" x="80" y="214" width="1120" height="52" rx="12"/>
+  <text x="104" y="247" fill="#e2e8f0" font-size="19">“Which drama set in a <tspan fill="#38bdf8">European capital</tspan> has the highest rating?”</text>
+
+  <!-- step 1: synthesis -->
+  <rect class="box" x="80" y="306" width="250" height="96" rx="14"/>
+  <text class="n" x="104" y="336">1  query synthesis</text>
+  <text class="t" x="104" y="366">syn(R) → Q</text>
+  <text class="s" x="104" y="390">SQL + semantic operators</text>
+  <path class="e" d="M330 354 L 378 354"/>
+
+  <!-- step 2: execution -->
+  <rect class="box" x="380" y="306" width="250" height="96" rx="14"/>
+  <text class="n" x="404" y="336">2  query execution</text>
+  <text class="t" x="404" y="366">exec(Q) → T</text>
+  <text class="s" x="404" y="390">read-only SQLite</text>
+  <path class="e" d="M630 354 L 678 354"/>
+
+  <!-- operators -->
+  <rect class="box" x="680" y="306" width="250" height="96" rx="14"/>
+  <text class="n" x="704" y="336">LM operators</text>
+  <text class="t" x="704" y="366">filter · rank · map</text>
+  <text class="s" x="704" y="390">one call per row, bounded</text>
+  <path class="e" d="M930 354 L 978 354"/>
+
+  <!-- step 3: generation -->
+  <rect class="box" x="980" y="306" width="220" height="96" rx="14"/>
+  <text class="n" x="1004" y="336">3  answer generation</text>
+  <text class="t" x="1004" y="366">gen(R, T) → A</text>
+  <text class="s" x="1004" y="390">“The Last Tram”</text>
+
+  <!-- guard card -->
+  <rect class="card" x="80" y="438" width="550" height="150" rx="14"/>
+  <text x="104" y="468" fill="#64748b" font-size="15">sqlglot guard + SQLite authorizer</text>
+  <text class="row" x="104" y="500">SELECT title, setting_city, rating</text>
+  <text class="row" x="104" y="524">FROM movies WHERE genre = <tspan fill="#38bdf8">:genre</tspan></text>
+  <text class="row" x="104" y="548">ORDER BY rating DESC <tspan fill="#38bdf8">LIMIT 100</tspan></text>
+  <text class="dim" x="104" y="574">one SELECT · allowlist · no PRAGMA/ATTACH/files</text>
+
+  <!-- rows card -->
+  <rect class="card" x="680" y="438" width="520" height="150" rx="14"/>
+  <text x="704" y="468" fill="#64748b" font-size="15">filter: “the city is a European capital”</text>
+  <text class="dim" y="500"><tspan x="704">Salt Lines</tspan><tspan x="880">Barcelona</tspan><tspan x="1020">8.6</tspan><tspan x="1080">✗</tspan></text>
+  <text class="row" y="524"><tspan x="704">The Last Tram</tspan><tspan x="880">Lisbon</tspan><tspan x="1020">8.3</tspan><tspan x="1080" fill="#38bdf8">✓</tspan></text>
+  <text class="dim" y="548"><tspan x="704">Harbor of Names</tspan><tspan x="880">Valparaíso</tspan><tspan x="1020">8.1</tspan><tspan x="1080">✗</tspan></text>
+  <text class="row" y="574"><tspan x="704">Winter Ledger</tspan><tspan x="880">Vienna</tspan><tspan x="1020">7.4</tspan><tspan x="1080" fill="#38bdf8">✓</tspan></text>
+</svg>

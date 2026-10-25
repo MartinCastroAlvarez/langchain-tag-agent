@@ -1,0 +1,155 @@
+{
+ "about": "The fake model's stand-in for an LM's world knowledge and judgment: hand-written labels for the criteria the benchmark uses. Real models answer these themselves.",
+ "filters": {
+  "the city is the capital of a European country": {
+   "values": [
+    "Lisbon",
+    "Paris",
+    "Berlin",
+    "Vienna",
+    "Prague",
+    "Madrid",
+    "Reykjavik"
+   ]
+  },
+  "the plot involves time travel": {
+   "contains": [
+    "sends him back to the previous day",
+    "wake up in 1962"
+   ]
+  },
+  "the review is sarcastic": {
+   "contains": [
+    "Oh wonderful, two hours",
+    "sound mixer clearly took the day off",
+    "another forty minutes of rope knots",
+    "Never seen that before",
+    "What a triumph",
+    "makes spreadsheets look exciting"
+   ]
+  },
+  "the city is in South America or in Africa": {
+   "values": [
+    "Valparaíso",
+    "Santiago",
+    "Rio de Janeiro",
+    "Bogotá",
+    "Lima",
+    "Buenos Aires",
+    "Lagos",
+    "Nairobi",
+    "Cairo",
+    "Marrakesh"
+   ]
+  },
+  "the city lies on a sea or ocean coast": {
+   "values": [
+    "Porto",
+    "Barcelona",
+    "Valparaíso",
+    "Reykjavik",
+    "Mumbai",
+    "Tokyo",
+    "Rio de Janeiro",
+    "Lagos"
+   ]
+  },
+  "the city is an Asian megacity with more than ten million people in its metropolitan area": {
+   "values": [
+    "Tokyo",
+    "Mumbai",
+    "Seoul",
+    "Bangkok"
+   ]
+  }
+ },
+ "ranks": {
+  "how enthusiastic the review is": [
+   [
+    "Absolutely magical",
+    10
+   ],
+   [
+    "So so good",
+    9
+   ],
+   [
+    "stunning, joyful",
+    8
+   ],
+   [
+    "Lovely and gentle",
+    6
+   ],
+   [
+    "Fine. The animation",
+    3
+   ]
+  ],
+  "how uplifting and heart-warming the plot is": [
+   [
+    "lonely boy make friends",
+    9
+   ],
+   [
+    "rooftop garden revolution",
+    8
+   ],
+   [
+    "smuggles memories",
+    3
+   ],
+   [
+    "copper miners strike",
+    2
+   ],
+   [
+    "delivery drones",
+    2
+   ],
+   [
+    "sealed desert city",
+    1
+   ]
+  ]
+ },
+ "maps": {
+  "name the continent the city is in": {
+   "South America": [
+    "Valparaíso",
+    "Santiago",
+    "Rio de Janeiro",
+    "Bogotá",
+    "Lima",
+    "Buenos Aires"
+   ],
+   "Africa": [
+    "Lagos",
+    "Nairobi",
+    "Cairo",
+    "Marrakesh"
+   ],
+   "Europe": [
+    "Porto",
+    "Vienna",
+    "Barcelona",
+    "Prague",
+    "Lisbon",
+    "Paris",
+    "Reykjavik",
+    "Madrid",
+    "Berlin"
+   ],
+   "Asia": [
+    "Mumbai",
+    "Tokyo",
+    "Seoul",
+    "Kyoto",
+    "Bangkok"
+   ],
+   "North America": [
+    "Denver"
+   ]
+  }
+ }
+}
