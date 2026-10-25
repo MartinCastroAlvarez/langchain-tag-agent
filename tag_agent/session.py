@@ -31,4 +31,5 @@ def open_database(settings: Settings) -> ReadOnlyDatabase:
 
 
 def build_pipeline(settings: Settings) -> TagPipeline:
-    return TagPipeline(make_model(settings), open_database(settings), settings)
+    model = make_model(settings)
+    return TagPipeline(model, open_database(settings), settings)

@@ -24,8 +24,11 @@ QUESTION = "Which drama set in a European capital has the highest rating?"
 
 def main() -> None:
     settings = Settings(provider="fake")
-    db = open_database(settings)
-    pipeline = TagPipeline(FakeTagModel(), db, settings)
+    with open_database(settings) as db:
+        run(TagPipeline(FakeTagModel(), db, settings))
+
+
+def run(pipeline: TagPipeline) -> None:
 
     print(f"Q: {QUESTION}\n")
     sql = pipeline.run(QUESTION, "text2sql")

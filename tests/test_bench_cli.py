@@ -136,8 +136,8 @@ def test_cli_custom_db(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> No
     conn.close()
     assert cli.main(["--db", str(path), "--schema"]) == 0
     assert "TABLE notes" in capsys.readouterr().out
-    db = open_database(Settings(db_path=str(path), hidden_columns=("notes.secret",)))
-    assert db.catalog.hidden == {"notes": frozenset({"secret"})}
+    with open_database(Settings(db_path=str(path), hidden_columns=("notes.secret",))) as db:
+        assert db.catalog.hidden == {"notes": frozenset({"secret"})}
 
 
 def test_settings_from_env() -> None:

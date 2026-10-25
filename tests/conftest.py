@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 
 import pytest
 
@@ -21,8 +22,9 @@ ITEMS: tuple[BenchItem, ...] = load_items()
 
 
 @pytest.fixture(scope="session")
-def db() -> ReadOnlyDatabase:
-    return ReadOnlyDatabase(DEFAULT_DB, MOVIES_CATALOG)
+def db() -> Iterator[ReadOnlyDatabase]:
+    with ReadOnlyDatabase(DEFAULT_DB, MOVIES_CATALOG) as database:
+        yield database
 
 
 @pytest.fixture

@@ -72,10 +72,11 @@ def test_timeout_interrupts_a_long_query() -> None:
     heavy = SqlGuard(db.catalog, max_tables=4).check(
         "SELECT count(*) FROM movies a, movies b, movies c, movies d WHERE a.id + b.id + c.id + d.id > 1"
     )
-    with pytest.raises(QueryTimeout, match="timeout"):
-        db.execute(heavy)
-    db.timeout = 5.0
-    assert db.query("SELECT count(*) FROM movies").rows == [(28,)]
+    with db:
+        with pytest.raises(QueryTimeout, match="timeout"):
+            db.execute(heavy)
+        db.timeout = 5.0
+        assert db.query("SELECT count(*) FROM movies").rows == [(28,)]
 
 
 def test_row_cap_marks_truncation(db: ReadOnlyDatabase) -> None:

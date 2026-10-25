@@ -8,6 +8,7 @@ import logging
 import sys
 from dataclasses import replace
 
+from tag_agent.agent import TagSession
 from tag_agent.agent import build_agent
 from tag_agent.agent import run_agent
 from tag_agent.config import DEFAULT_MODELS
@@ -89,14 +90,14 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     settings = _settings(args)
     if args.schema:
-        print(schema_for(open_database(settings), settings.schema_samples))
+        with open_database(settings) as db:
+            print(schema_for(db, settings.schema_samples))
         return 0
     if args.mermaid:
-        pipe = TagPipeline(FakeTagModel(), open_database(settings), settings)
-        from tag_agent.agent import TagSession
-
-        session = TagSession(pipe, pipe.engine(CallCounter(), []))
-        print(build_agent(pipe.model, session).get_graph().draw_mermaid())
+        with open_database(settings) as db:
+            pipe = TagPipeline(FakeTagModel(), db, settings)
+            session = TagSession(pipe, pipe.engine(CallCounter(), []))
+            print(build_agent(pipe.model, session).get_graph().draw_mermaid())
         return 0
     if not args.question:
         _parser().error("a question is required")
@@ -107,14 +108,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     modes: tuple[Mode, ...] = MODES if args.mode == "all" else (args.mode,)
     results = []
-    for mode in modes:
-        if mode == "agent":
-            result = run_agent(pipeline, args.question)
-        else:
-            result = pipeline.run(args.question, mode)
-        results.append(result)
-        if not args.json:
-            _print(result, args.verbose)
+    with pipeline.db:
+        for mode in modes:
+            if mode == "agent":
+                result = run_agent(pipeline, args.question)
+            else:
+                result = pipeline.run(args.question, mode)
+            results.append(result)
+            if not args.json:
+                _print(result, args.verbose)
     if args.json:
         print(json.dumps([_as_json(r) for r in results], indent=1, ensure_ascii=False))
     return 0 if all(r.status == "ok" for r in results) else 1

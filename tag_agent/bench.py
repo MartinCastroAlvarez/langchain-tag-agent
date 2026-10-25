@@ -71,9 +71,15 @@ def _answer(pipeline: TagPipeline, item: BenchItem, mode: Mode) -> TagResult:
 
 def run_bench(settings: Settings, modes: tuple[Mode, ...] | None = None) -> Report:
     started = time.perf_counter()
-    db = open_database(settings)
     model = make_model(settings)
-    pipeline = TagPipeline(model, db, settings)
+    with open_database(settings) as db:
+        return _run(TagPipeline(model, db, settings), settings, modes, started)
+
+
+def _run(
+    pipeline: TagPipeline, settings: Settings, modes: tuple[Mode, ...] | None, started: float
+) -> Report:
+    db = pipeline.db
     items = load_items()
     report = Report(settings.provider, settings.model)
 

@@ -113,16 +113,20 @@ class ReadOnlyDatabase:
         conn = sqlite3.connect(
             f"{resolved.as_uri()}?mode=ro", uri=True, check_same_thread=False, isolation_level=None
         )
-        if hasattr(conn, "enable_load_extension"):
-            conn.enable_load_extension(False)
-        conn.execute("PRAGMA query_only = ON")
-        conn.execute("PRAGMA trusted_schema = OFF")
-        for name, value in _LIMITS.items():
-            conn.setlimit(getattr(sqlite3, name), value)
-        base = catalog if catalog is not None else Catalog.introspect(conn)
-        self.catalog = base.with_hidden(self._hidden_columns(conn, base))
-        conn.set_authorizer(self._authorize)
-        conn.set_progress_handler(self._progress, 1000)
+        try:
+            if hasattr(conn, "enable_load_extension"):
+                conn.enable_load_extension(False)
+            conn.execute("PRAGMA query_only = ON")
+            conn.execute("PRAGMA trusted_schema = OFF")
+            for name, value in _LIMITS.items():
+                conn.setlimit(getattr(sqlite3, name), value)
+            base = catalog if catalog is not None else Catalog.introspect(conn)
+            self.catalog = base.with_hidden(self._hidden_columns(conn, base))
+            conn.set_authorizer(self._authorize)
+            conn.set_progress_handler(self._progress, 1000)
+        except BaseException:
+            conn.close()
+            raise
         self._conn = conn
 
     @staticmethod
